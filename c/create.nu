@@ -22,7 +22,7 @@ export def main [
   let params: record = ({
     Hostname: (if $host == null {$name} else $name)
     Domainname: $domain
-    User: ($user | into string)
+    User: (if $user != null {$user | into string} else {null})
     AttachStdin: false
     AttachStdout: false
     AttachStderr: false

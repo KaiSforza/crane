@@ -19,7 +19,7 @@ nothing -> table
 ] {
   let resp = dock post -e -f $"/containers/($name)/($doing)" $query
   match $resp.status {
-    204 => $resp.body
+    204 => $name
     304 => "Nothing to do here."
     _ => (error make -u {msg: $resp.body.message})
   }
@@ -111,7 +111,7 @@ export def delete [
   $names | par-each {|name|
     let resp = dock delete -e -f $"/containers/($name)"
     match $resp.status {
-      204 => $resp.body
+      204 => $"Deleted ($name)"
       304 => "Nothing to do here."
       _ => (error make -u {msg: $resp.body.message})
     }
