@@ -1,3 +1,62 @@
+const ddhost = {
+  scheme: "http",
+  host: "localhost",
+  port: 2375
+}
+
+export def filterRecord []: record -> record {
+  transpose k v
+  | where v != null
+  | transpose -rid
+}
+
+export def dock [] {}
+
+export def "dock get" [
+  path: string
+  params: record = {}
+  --allow-errors (-e)
+  --full (-f)
+] {
+  http get --allow-errors=$allow_errors --full=$full (
+    $ddhost | merge {path: $path, params: $params} | url join
+  )
+}
+
+export def "dock delete" [
+  path: string
+  params: record = {}
+  --allow-errors (-e)
+  --full (-f)
+] {
+  http delete --allow-errors=$allow_errors --full=$full (
+    $ddhost | merge {path: $path, params: $params} | url join
+  )
+}
+
+export def "dock head" [
+  path: string
+  params: record = {}
+  #--allow-errors (-e)
+  #--full (-f)
+] {
+  #http head --allow-errors=$allow_errors --full=$full (
+  http head ($ddhost | merge {path: $path, params: $params} | url join)
+}
+
+export def "dock post" [
+  path: string
+  params: record = {}
+  data: any = ""
+  --allow-errors (-e)
+  --full (-f)
+  --conttype: string = "application/json"
+] {
+  http post --allow-errors=$allow_errors --full=$full --content-type $conttype (
+    $ddhost | merge {path: $path, params: $params} | url join
+  ) $data
+}
+
 export def "into safeDate" []: [
   int -> datetime
   string -> datetime
@@ -48,4 +107,21 @@ export def splitBytes [
   | last $n
   | each {|s| $s | str replace --regex $"^.(char nul){3}.{4}" ""}
   | str join $sep
+}
+
+export def "str shorten" [
+  len: int
+  cont: string = "…";
+]: string -> string {
+  match ($in | str length) {
+    $x if $x >= $len => { ($in | str substring 0..($len - 1)) + $cont }
+    _ => $in
+  }
+}
+
+export def "into port" [
+]: string -> record { {} }
+export def "from port" [
+]: record -> string {
+  ""
 }

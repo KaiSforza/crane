@@ -12,7 +12,7 @@ export def main [
   --logs: int = 10 # Get previous logs
   #--stream # Don't stream more logs.
 ]: nothing -> any {
-  let nttysep = $"\((0x[01] | decode)|(0x[02] | decode)\)(0x[00 00 00] | decode)[(0x[00] | decode)-(0x[ff] | decode)]{4}"
+  let nttysep = $"[(char nul)-(0x[02] | decode)](char nul){3}.{4}"
   let sData = {
     stdin: false,
     stdout: (not $nostdout),
