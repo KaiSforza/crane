@@ -50,9 +50,22 @@ export def "dock post" [
   data: any = ""
   --allow-errors (-e)
   --full (-f)
-  --conttype: string = "application/json"
+  --conttype (-t): string = "application/json"
 ] {
   http post --allow-errors=$allow_errors --full=$full --content-type $conttype (
+    $ddhost | merge {path: $path, params: $params} | url join
+  ) $data
+}
+
+export def "dock put" [
+  path: string
+  params: record = {}
+  data: any = ""
+  --allow-errors (-e)
+  --full (-f)
+  --conttype (-t): string = "application/json"
+] {
+  http put --allow-errors=$allow_errors --full=$full --content-type $conttype (
     $ddhost | merge {path: $path, params: $params} | url join
   ) $data
 }

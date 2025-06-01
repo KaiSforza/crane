@@ -134,9 +134,11 @@ export def ls-files [
       | decode base64
       | decode
       | from json
+      | insert path $file
       | into filesize size
       | into datetime mtime
       | upsert mode {|| dock_mode}
+      | move --first path linkTarget
     }
   }
 }
@@ -144,9 +146,35 @@ export def ls-files [
 # Copy files to or from a container
 export def copy [
   ...files: string # Files to copy
+  --force (-f) # Force overwriting dirs with non-directory content
+  --archive (-a) # Copy the file ownership
 ] {
-# TODO Implement this.
-  #if files.0 | str starts-with ''
+  if ($files | length) < 2 {error make {msg: "Must have more than one file/destination listed."}}
+  print $files
+
+  if ($files | last | str contains ':') {
+    # Copy to container
+    let container = $files | last | split row ':'
+    $files | drop | par-each {|file|
+      let tarfile = (tar -cf - $file)
+      tar -cf - $file
+      | dock put -fe -t "application/x-tar" $"/containers/($container.0)/archive" {
+        path: $container.1
+        noOverwriteDirNonDir: (not $force)
+        copyUIDGID: $archive
+      } $in
+    }
+  } else {
+    if ($files | last | path type) != dir {error make {msg: "Local path must be a directory."}}
+    $files | drop | par-each {|file|
+      let container = $file | split row ':'
+      let tf = dock get -fe $"/containers/($container.0)/archive" {path: $container.1}
+      match $tf.status {
+        200 => ($tf.body | tar -C ($files | last) -xvf -)
+        _ => (error make {msg: $tf.body})
+      }
+    }
+  }
 }
 
 
